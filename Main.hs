@@ -11,18 +11,22 @@ data Board = Board
   , unclicked :: [Int]
 }
 
+
 -- pocetno stanje table - nijedno polje nije kliknuto
 initialState :: Board
 initialState = Board [] [0..80]
 
 -- funkcija za iscrtavanje table - trebalo bi proci kroz listu "clicked" i iscrtati odgovarajuce slike u zavisnosti od numbers
-drawBoard :: Board -> Picture
-drawBoard board = Pictures $ grid : tiles where
-   tiles = map (drawTile) $ clicked board
+drawBoard :: RandomGen g => g -> Board -> Picture
+drawBoard g board = Pictures $ grid : tiles where
+   tiles = map (drawTile g) $ clicked board
    grid = pictures [translate i j $ color blue $ rectangleWire 50 50 | i <- [-200,-150..200], j <- [-200,-150..200]]
 
-drawTile :: Int -> Picture
-drawTile index = pictures [translate (-200.0 + 50.0 * fromIntegral(index - (index `div` 9)*9)) (-200.0 + 50.0 * fromIntegral(index `div` 9)) $ color red $ rectangleSolid 50 50]
+drawTile :: RandomGen g => g -> Int -> Picture
+drawTile g index
+  | image == 9 = pictures [translate (-200.0 + 50.0 * fromIntegral(index - (index `div` 9)*9)) (-200.0 + 50.0 * fromIntegral(index `div` 9)) $ color red $ rectangleSolid 50 50]
+  | otherwise = pictures [translate (-200.0 + 50.0 * fromIntegral(index - (index `div` 9)*9)) (-200.0 + 50.0 * fromIntegral(index `div` 9)) $ color green $ rectangleSolid 50 50]
+  where image = head [number | (ind, number) <- (numbers g), (ind == index)]
   
 -- funkcija koja na osnovu koordinata racuna odgovarajuci indeks u listi polja
 coordinatesToIndex :: Float -> Float -> Int
@@ -47,17 +51,18 @@ fps = 60
 
 background :: Color
 background = light (light blue)
-
+  
+  
 main :: IO ()
 main = do
-  g <- newStdGen
+  g <- getStdGen
   one <- loadBMP "1.bmp"
   print "Indeksi polja gde su mine:"
-  print $ mineTiles 0 81 g
+  print $ mineTiles 0 80 g
   print "Matrica:"
   print $ numbers g
   --print $ coordinatesToIndex (2.00) (2.00)
-  play window background fps initialState drawBoard handleKeys (flip const)
+  play window background fps initialState (drawBoard g) handleKeys (flip const)
   
   
 -- generisanje 10 nasumicnih brojeva (indeksa gde ce biti smestene mine)
@@ -85,7 +90,7 @@ adjacentTilesIndices index
 
 -- lista indeksa susednih poljima gde su mine
 indicesAdjacentToMines :: RandomGen g => g -> [Int]
-indicesAdjacentToMines g = concat (map (adjacentTilesIndices) (mineTiles 0 81 g))
+indicesAdjacentToMines g = concat (map (adjacentTilesIndices) (mineTiles 0 80 g))
 
 -- broj pojavljivanja elementa u listi
 count :: Eq a => a -> [a] -> Int
@@ -93,7 +98,7 @@ count x xs = foldl (\acc y -> if x == y then acc+1 else acc) 0 xs
 
 -- lista sa rasporedjenim odgovarajucim brojevima i brojem 9 na mestima gde su mine
 numbers :: RandomGen g => g -> [(Int, Int)]
-numbers g = sort ((zip ([0..] \\ (mineTiles 0 81 g)) [count x (indicesAdjacentToMines g) | x <- ([0..80] \\ (mineTiles 0 81 g))]) `union` (zip (mineTiles 0 81 g) [9,9..]))
+numbers g = sort ((zip ([0..] \\ (mineTiles 0 80 g)) [count x (indicesAdjacentToMines g) | x <- ([0..80] \\ (mineTiles 0 80 g))]) `union` (zip (mineTiles 0 80 g) [9,9..]))
 
 
 -- 0  1  2  3  4  5  6  7  8
