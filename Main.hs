@@ -2,46 +2,64 @@ module Main(main) where
 
 import Graphics.Gloss
 import System.Random
-import Data.List
-import Graphics.Gloss.Interface.Pure.Game
+import Data.List as L
+import Graphics.Gloss.Interface.Pure.Game as G
 import Data.Fixed
+import Graphics.Image
 
+
+-- stanje table
 data Board = Board
   { clicked :: [Int]
   , unclicked :: [Int]
-}
-
-
+  , gameState :: Game
+  }
+  
+-- stanje igre  
+data Game = Playing
+	  | Won
+	  | Lost
+	  | Ended
+	  deriving Eq
+	  
 -- pocetno stanje table - nijedno polje nije kliknuto
 initialState :: Board
-initialState = Board [] [0..80]
+initialState = Board [] [0..80] Playing
 
--- funkcija za iscrtavanje table - trebalo bi proci kroz listu "clicked" i iscrtati odgovarajuce slike u zavisnosti od numbers
-drawBoard :: RandomGen g => g -> Board -> Picture
-drawBoard g board = Pictures $ grid : tiles where
-   tiles = map (drawTile g) $ clicked board
-   grid = pictures [translate i j $ color blue $ rectangleWire 50 50 | i <- [-200,-150..200], j <- [-200,-150..200]]
+-- iscrtavanje table i polja - za svaki element liste "clicked" iscrtava se odgovarajuca slika u zavisnosti od numbers
+drawBoard :: RandomGen g => g -> [Picture] -> Board -> Picture
+drawBoard g images board
+    | ((gameState board) == Won) = Pictures $ grid : tiles ++ [images !! 9]
+    | ((gameState board) == Lost) = Pictures $ grid : tiles ++ [images !! 10]
+    | otherwise = Pictures $ grid : tiles
+  where
+   tiles = L.map (drawTile g images) $ clicked board
+   grid = pictures [G.translate i j $ color orange $ rectangleWire 50 50 | i <- [-200,-150..200], j <- [-200,-150..200]]
 
-drawTile :: RandomGen g => g -> Int -> Picture
-drawTile g index
-  | image == 9 = pictures [translate (-200.0 + 50.0 * fromIntegral(index - (index `div` 9)*9)) (-200.0 + 50.0 * fromIntegral(index `div` 9)) $ color red $ rectangleSolid 50 50]
-  | otherwise = pictures [translate (-200.0 + 50.0 * fromIntegral(index - (index `div` 9)*9)) (-200.0 + 50.0 * fromIntegral(index `div` 9)) $ color green $ rectangleSolid 50 50]
+drawTile :: RandomGen g => g -> [Picture] -> Int -> Picture
+drawTile g images index
+  | image == 0 = pictures [G.translate (-200.0 + 50.0 * fromIntegral(index - (index `div` 9)*9)) (-200.0 + 50.0 * fromIntegral(index `div` 9)) $ color (light (light orange)) $ rectangleSolid 50 50]
+  | otherwise = pictures [G.translate (-200.0 + 50.0 * fromIntegral(index - (index `div` 9)*9)) (-200.0 + 50.0 * fromIntegral(index `div` 9)) $ (images !! (image-1))]   
   where image = head [number | (ind, number) <- (numbers g), (ind == index)]
-  
+    
 -- funkcija koja na osnovu koordinata racuna odgovarajuci indeks u listi polja
 coordinatesToIndex :: Float -> Float -> Int
-coordinatesToIndex x y = let k = (x+200) `div'` 50
-			     l = (y+200) `div'` 50
+coordinatesToIndex x y = let k = (x+225) `div'` 50
+			     l = (y+225) `div'` 50
 			 in l*9+k
   
 -- funkcija za obradu levog klika misa
-handleKeys :: Event -> Board -> Board
-handleKeys (EventKey (MouseButton LeftButton) Down _ (x,y)) board = changeState (coordinatesToIndex x y) board
-handleKeys _ board = board
+handleKeys :: RandomGen g => g -> Event -> Board -> Board
+handleKeys g (EventKey (MouseButton LeftButton) Down _ (x,y)) board = changeState g (coordinatesToIndex x y) board
+handleKeys g _ board = board
 
 -- promena stanja kada dodje do klika
-changeState :: Int -> Board -> Board
-changeState tile board = board { clicked = tile : clicked board, unclicked = delete tile $ unclicked board}
+changeState :: RandomGen g => g -> Int -> Board -> Board
+changeState g tile board 
+  | checkIfElem tile (mineTiles 0 80 g) && (gameState board /= Won) == True = board { clicked = [0..80], unclicked = [], gameState = Lost }
+  | (length $ unclicked board) == 11 = board { clicked = [0..80], unclicked = [], gameState = Won }
+  | checkIfElem tile (unclicked board) == True = board { clicked = tile : clicked board, unclicked = delete tile $ unclicked board, gameState = Playing }
+  | otherwise = board { clicked = clicked board, unclicked = unclicked board, gameState = gameState board }
   
 window :: Display
 window = InWindow "Minesweeper" (450, 450) (10, 10)
@@ -50,19 +68,28 @@ fps :: Int
 fps = 60
 
 background :: Color
-background = light (light blue)
+background = light orange
   
   
 main :: IO ()
 main = do
   g <- getStdGen
-  one <- loadBMP "1.bmp"
   print "Indeksi polja gde su mine:"
   print $ mineTiles 0 80 g
   print "Matrica:"
   print $ numbers g
-  --print $ coordinatesToIndex (2.00) (2.00)
-  play window background fps initialState (drawBoard g) handleKeys (flip const)
+  img1 <- loadBMP "images/1.bmp"
+  img2 <- loadBMP "images/2.bmp"
+  img3 <- loadBMP "images/3.bmp"
+  img4 <- loadBMP "images/4.bmp"
+  img5 <- loadBMP "images/5.bmp"
+  img6 <- loadBMP "images/6.bmp"
+  img7 <- loadBMP "images/7.bmp"
+  img8 <- loadBMP "images/8.bmp"
+  img9 <- loadBMP "images/9.bmp"
+  won <- loadBMP "images/won.bmp"
+  lost <- loadBMP "images/lost.bmp"
+  play window background fps initialState (drawBoard g [img1, img2, img3, img4, img5, img6, img7, img8, img9, won, lost]) (handleKeys g) (flip const)
   
   
 -- generisanje 10 nasumicnih brojeva (indeksa gde ce biti smestene mine)
@@ -73,7 +100,7 @@ mineTiles a b g = take 10 $ nub (randomRs (a, b) g)
 checkIfElem :: Int -> [Int] -> Bool
 checkIfElem x l 
          | x `elem` l = True
-         | otherwise = False
+         | otherwise = False         
 
 -- indeksi susednih polja
 adjacentTilesIndices :: Int -> [Int]
@@ -90,7 +117,7 @@ adjacentTilesIndices index
 
 -- lista indeksa susednih poljima gde su mine
 indicesAdjacentToMines :: RandomGen g => g -> [Int]
-indicesAdjacentToMines g = concat (map (adjacentTilesIndices) (mineTiles 0 80 g))
+indicesAdjacentToMines g = concat (L.map (adjacentTilesIndices) (mineTiles 0 80 g))
 
 -- broj pojavljivanja elementa u listi
 count :: Eq a => a -> [a] -> Int
@@ -99,14 +126,3 @@ count x xs = foldl (\acc y -> if x == y then acc+1 else acc) 0 xs
 -- lista sa rasporedjenim odgovarajucim brojevima i brojem 9 na mestima gde su mine
 numbers :: RandomGen g => g -> [(Int, Int)]
 numbers g = sort ((zip ([0..] \\ (mineTiles 0 80 g)) [count x (indicesAdjacentToMines g) | x <- ([0..80] \\ (mineTiles 0 80 g))]) `union` (zip (mineTiles 0 80 g) [9,9..]))
-
-
--- 0  1  2  3  4  5  6  7  8
--- 9 10 11 12 13 14 15 16 17
---18 19 20 21 22 23 24 25 26
---27 28 29 30 31 32 33 34 35
---36 37 38 39 40 41 42 43 44
---45 46 47 48 49 50 51 52 53
---54 55 56 57 58 59 60 61 62
---63 64 65 66 67 68 69 70 71
---72 73 74 75 76 77 78 79 80

@@ -17,7 +17,7 @@ version = Version [0,1,0,0] []
 bindir, libdir, datadir, libexecdir, sysconfdir :: FilePath
 
 bindir     = "/home/db2inst1/Desktop/minesweeper/.cabal-sandbox/bin"
-libdir     = "/home/db2inst1/Desktop/minesweeper/.cabal-sandbox/lib/x86_64-linux-ghc-7.10.3/minesweeper-0.1.0.0-E8KJPh2wGL3ELCOansSFyQ"
+libdir     = "/home/db2inst1/Desktop/minesweeper/.cabal-sandbox/lib/x86_64-linux-ghc-7.10.3/minesweeper-0.1.0.0-FCUX30TWYSP3eJa3y3rmEW"
 datadir    = "/home/db2inst1/Desktop/minesweeper/.cabal-sandbox/share/x86_64-linux-ghc-7.10.3/minesweeper-0.1.0.0"
 libexecdir = "/home/db2inst1/Desktop/minesweeper/.cabal-sandbox/libexec"
 sysconfdir = "/home/db2inst1/Desktop/minesweeper/.cabal-sandbox/etc"

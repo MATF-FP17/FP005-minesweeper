@@ -14,12 +14,26 @@
   (major1) == 4 && (major2) <  8 || \
   (major1) == 4 && (major2) == 8 && (minor) <= 2)
 
+/* package bmp-1.2.6.3 */
+#define VERSION_bmp "1.2.6.3"
+#define MIN_VERSION_bmp(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  2 || \
+  (major1) == 1 && (major2) == 2 && (minor) <= 6)
+
 /* package gloss-1.9.4.1 */
 #define VERSION_gloss "1.9.4.1"
 #define MIN_VERSION_gloss(major1,major2,minor) (\
   (major1) <  1 || \
   (major1) == 1 && (major2) <  9 || \
   (major1) == 1 && (major2) == 9 && (minor) <= 4)
+
+/* package hip-1.5.3.0 */
+#define VERSION_hip "1.5.3.0"
+#define MIN_VERSION_hip(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  5 || \
+  (major1) == 1 && (major2) == 5 && (minor) <= 3)
 
 /* package random-1.1 */
 #define VERSION_random "1.1"
@@ -98,5 +112,5 @@
   (major1) == 2 && (major2) <  22 || \
   (major1) == 2 && (major2) == 22 && (minor) <= 0)
 
-#define CURRENT_PACKAGE_KEY "mines_E8KJPh2wGL3ELCOansSFyQ"
+#define CURRENT_PACKAGE_KEY "mines_FCUX30TWYSP3eJa3y3rmEW"
 
