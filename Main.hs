@@ -18,7 +18,6 @@ data Board = Board
 data Game = Playing
 	  | Won
 	  | Lost
-	  | Ended
 	  deriving Eq
 	  
 
@@ -72,9 +71,13 @@ handleKeys g _ board = board
 -- promena stanja kada dodje do klika
 changeState :: RandomGen g => g -> Int -> Board -> Board
 changeState g tile board 
+  -- slucaj da je kliknuto polje na kome je mina (sva polja prelaze u "clicked" da bi se prikazala cela tabla)
   | checkIfElem tile (mineTiles 0 lastTileIndex g) && (gameState board /= Won) == True = board { clicked = [0..lastTileIndex], unclicked = [], gameState = Lost }
+  -- slucaj da su ostala samo polja s minama (pobeda)
   | (length $ unclicked board) == numOfMines + 1 = board { clicked = [0..lastTileIndex], unclicked = [], gameState = Won }
+  -- "obican" slucaj
   | checkIfElem tile (unclicked board) == True = board { clicked = tile : clicked board, unclicked = delete tile $ unclicked board, gameState = Playing }
+  -- inace, nista se ne menja (kraj igre)
   | otherwise = board { clicked = clicked board, unclicked = unclicked board, gameState = gameState board }
   
 window :: Display
