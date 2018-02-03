@@ -57,7 +57,7 @@ executable minesweeper
   -- other-extensions:    
   
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.8 && <4.9, gloss==1.9.*, GLUT, random, hip, bmp
+  build-depends:       base >=4.8 && <4.9, gloss==1.9.*, GLUT, random, bmp
   
   -- Directories containing source files.
   -- hs-source-dirs:      
